@@ -1,0 +1,10 @@
+{
+    "name": "twitch",
+    "description":"Network analysis of the Twitch knowledge graph",
+    "dbms": [
+      {
+          "dumpFile": "data/twitch-40.dump",
+          "targetNeo4jVersion": "^4.0"
+      }
+  ]
+}

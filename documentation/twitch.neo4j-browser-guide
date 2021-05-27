@@ -1,0 +1,568 @@
+<style type="text/css" media="screen">
+/*
+.nodes-image {
+	margin:-100;
+}
+*/	
+@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css");
+
+.imageblock .content img, .image img {max-width: 900px;max-height: 300px;}
+.deck h3, .deck h4 {display: block !important;margin-bottom:8px;margin-top:5px;}
+.listingblock {margin:8px;}
+.pull-bottom {position:relative;bottom:1em;}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning:before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution:before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important:before{content:"\f06a";color:#bf0000}
+.admonitionblock.note.speaker { display:none; }
+</style>
+<style type="text/css" media="screen">
+/* #editor.maximize-editor .CodeMirror-code { font-size:24px; line-height:26px; } */
+</style>
+<article class="guide" ng-controller="AdLibDataController">
+  <carousel class="deck container-fluid">
+    <!--slide class="row-fluid">
+      <div class="col-sm-3">
+        <h3>Twitch</h3>
+        <p class="lead">Information</p>
+			<!dl>
+				
+				
+				
+				
+				
+			</dl>
+		</div>
+      <div class="col-sm-9">
+        <figure>
+          <img style="width:300px" src=""/>
+        </figure>
+      </div>
+    </slide-->
+    
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Twitch network analysis</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>Twitch is an online platform that allows users to share their content via live stream.
+Twitch streamers broadcast their gameplay or activity by sharing their screen with fans who can hear and watch them live.</p>
+</div>
+<div class="paragraph">
+<p>This guide will show you how to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Perform exploratory graph analysis</p>
+</li>
+<li>
+<p>Analyze the network of users</p>
+</li>
+<li>
+<p>Find communities of streamers with shared audience</p>
+</li>
+</ul>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Graph model</h3>
+    <br/>
+    <div>
+      <div class="imageblock">
+<div class="content">
+<img src="/img/graph-model.png" alt="graph model">
+</div>
+</div>
+<div class="paragraph">
+<p>The Twitch social network composes of users.
+A small percent of those users broadcast their gameplay or activities through live streams.
+In the graph model, users who do live streams are tagged with a secondary label Stream.
+Additional information about which teams they belong to, which games they play on stream, and in which language they present their content is present.
+You also know how many followers they had at the moment of scraping, the all-time historical view count, and when they created their user account.
+The most relevant information for network analysis is knowing which users engaged in the streamer’s chat.
+You can distinguish if the user who chatted in the stream was a regular user (CHATTER relationship), a moderator of the stream (MODERATOR relationship), or a VIP of the stream.</p>
+</div>
+<div class="paragraph">
+<p><em>The network information was scraped between the 7th and the 10th of May 2021.</em></p>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Graph statistics</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>To learn how many nodes and of which labels there are in the network, you can use the <em>apoc.meta.stats</em> procedure.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL apoc.meta.stats()
+YIELD labels<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can observe that almost all of the nodes in our graph are users.
+There are 10.5 million users and only around 6000 of them are streamers.
+These streamers have played 594 games and broadcasted in 29 different languages.</p>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Exploring streamer&#8217;s view and follower count</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>The total view count and the number of followers for each streamer are stored as node properties.
+You can find the most viewed and most followed streamers using the <code>ORDER BY</code> and <code>LIMIT</code> clauses.</p>
+</div>
+<div class="paragraph">
+<p>Find streamers with the most all-time view count.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
+WHERE exists(u.total_view_count)
+RETURN u.name as streamer,
+       u.total_view_count as total_view_count
+ORDER BY total_view_count DESC
+LIMIT 10;<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Find streamers with the highest count of followers.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
+WHERE exists(u.followers)
+RETURN u.name as streamer,
+       u.followers as followers
+ORDER BY followers DESC
+LIMIT 10;<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><em>Only streamers that have been active on the weekend between 7th and the 10th of May 2021 are included.</em></p>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Cypher implicit aggregations</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>When using aggregation operators in Cypher, you must remember that Cypher uses implicit aggregation.
+All the non-aggregated variables that are in the <code>RETURN</code> or the <code>WITH</code> clause, will be used as grouping keys.
+In this example, you will count the number of streamers per their account creation year.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
+WHERE exists(u.createdAt)
+RETURN u.createdAt.year as year,
+       count(*) as countOfNewStreamers
+ORDER BY year;<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Counting the number of relationships per node</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>Neo4j maintains a transactional count store for holding relationship count store for each node.
+To access the relationship count store, you can use the <code>size()</code> clause.
+Obtaining counts from the count store is constant-time, which can significantly optimize the performance of Cypher queries.
+Here, you will inspect the games that have the highest count of streamers playing them.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (g:Game)
+RETURN g.name as game,
+       size((g)&lt;-[:PLAYS]-()) as number_of_streamers
+ORDER BY number_of_streamers DESC
+LIMIT 10<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Find users with the highest count of VIP relationships.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
+RETURN u.name as user,
+       size((u)-[:VIP]-&gt;()) as number_of_vips
+ORDER BY number_of_vips DESC LIMIT 10;<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Find users with the highest count of MODERATOR relationships.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
+RETURN u.name as user,
+       size((u)-[:MODERATOR]-&gt;()) as number_of_mods
+ORDER BY number_of_mods DESC LIMIT 10;<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Cypher subqueries</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p><code>CALL</code> clause allows to execute subqueries, i.e. queries inside of other queries.
+Subqueries allow you to compose queries, which is especially useful when working with aggregations or limiting results.
+In this example, you will first match a single streamer.
+Next, you will use a subquery to match five streamers and separately five users that chatted in the original streamer&#8217;s broadcast.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (s:Stream)
+WITH s LIMIT 1
+CALL {
+    WITH s
+    MATCH p=(s)&lt;--(:Stream)
+    RETURN p
+    LIMIT 5
+    UNION
+    WITH s
+    MATCH p=(s)&lt;--(:User)
+    RETURN p
+    LIMIT 5
+}
+RETURN p<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can observe that streamers behave like regular users.
+They can chat in other streamer&#8217;s broadcasts, be their moderator or VIP.</p>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Node degree distribution</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>Node degree is simply the count of relationships each node has.
+Here, we are dealing with a directed network as the relationship direction holds semantic value.
+When dealing with directed networks, you can split the node degree distribution into in-degree, where you count incoming relationships, and out-degree, where you are counting outgoing connections.
+First, you will examine the out-degree distribution of the user chatter network.
+Using the <code>apoc.agg.statistics</code> procedure you can evaluate the distribution by looking at various percentile values of the values.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
+WITH u, size((u)-[:CHATTER|VIP|MODERATOR]-&gt;()) as node_outdegree
+RETURN apoc.agg.statistics(node_outdegree) as statistics<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Next, you will inspect the in-degree distribution of the user chatter network.
+Remember, only streamers have incoming relationships, so we can skip inspecting regular users as we already know their in-degree is zero.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
+WITH u, size((u)&lt;-[:CHATTER|VIP|MODERATOR]-()) as node_indegree
+RETURN apoc.agg.statistics(node_indegree) as statistics<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Graph Data Science library</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>The Neo4j Graph Data Science library (GDS) features more than 50 graph algorithms, ranging from centrality to community detection and node embedding algorithms.
+The GDS library executes graph algorithms on a specialized in-memory graph format to improve the performance and scale of graph algorithms.
+Using native or cypher projections, we can project the stored graph in our database to the in-memory graph format.
+You will begin by projecting all <code>User</code> and <code>Stream</code> nodes and the possible relationships between them, which are <code>CHATTER</code>, <code>MODERATOR</code>, and <code>VIP</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.create('twitch',
+  ['User', 'Stream'],
+  ['CHATTER', 'VIP', 'MODERATOR'])<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Weakly Connected Components</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>The Weakly connected components algorithm (WCC) is used to find disparate islands or components of nodes within a given network.
+A node can reach all the other nodes in the same component when you disregard the relationship direction.</p>
+</div>
+<div class="paragraph">
+<p>Use the following Cypher query to execute a Weakly-Connected Components algorithm on the Twitch user network.
+The <em>stats</em> method of the algorithm is used when we are interested in only high-level statistics of algorithm results.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.wcc.stats('twitch')
+YIELD componentCount, componentDistribution<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With the in-memory graph projection, you can also filter nodes or relationships at algorithm execution time.
+In the next example, the WCC algorithm will consider only Stream nodes and connections between them.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.wcc.stats('twitch', {nodeLabels:['Stream']})
+YIELD componentCount, componentDistribution<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>PageRank</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>PageRank is probably one of the most famous graph algorithms.
+It is used to calculate node importance by considering the inbound relationships of a node as well as the importance of the nodes linking to it. PageRank was initially used to calculate the importance of websites by Google, but it can be used in many different scenarios.
+Use the following Cypher query to execute the PageRank algorithm on the whole user network.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.pageRank.stream('twitch')
+YIELD nodeId, score
+WITH nodeId, score
+ORDER BY score
+DESC LIMIT 10
+RETURN gds.util.asNode(nodeId).name as user, score<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Similarly as with the WCC algorithm, you can choose to run PageRank on the streamer subgraph.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.pageRank.stream('twitch', {nodeLabels:['Stream']})
+YIELD nodeId, score
+WITH nodeId, score
+ORDER BY score
+DESC LIMIT 10
+WITH gds.util.asNode(nodeId) as node,score
+RETURN node.name as streamer,
+       score,
+       size((node)&lt;--(:Stream)) as relationships_from_streamers,
+       size((node)&lt;--(:User)) as relationships_from_users<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Community detection</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>Community detection or clustering algorithms are used to infer the community structure of a given network.
+Communities are vaguely defined as groups of nodes within a network that are more densely connected to one another than to other nodes.
+With the following Cypher query, you can find the ten largest communities.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.louvain.stream('twitch', {nodeLabels:['Stream']})
+YIELD nodeId, communityId
+RETURN communityId, count(*) as communitySize
+ORDER BY communitySize DESC LIMIT 10<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Shared audience analysis</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>First, drop the current in-memory projected graph.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.drop("twitch")<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You will examine the shared audience between streamers who play Chess or Poker on stream.
+You can pick any other games if you so wish.
+To simplify queries, you will first tag the mentioned streamers with a secondary label.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (s:Stream)-[:PLAYS]-&gt;(g:Game)
+WHERE g.name in ["Chess", "Poker"]
+SET s:PokerChess<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Next, you will use <code>apoc.periodic.iterate</code> procedure to batch update users who have an out-degree higher than 1.
+With this step, you will filter regular users who have chatted in more than a single stream.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL apoc.periodic.iterate("
+    MATCH (u:User)
+    WHERE NOT u:Stream AND size((u)--&gt;(:Stream)) &gt; 1
+    RETURN u",
+    "SET u:Audience",
+    {batchSize:50000, parallel:true}
+)<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Node Similarity algorithm</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>You need to infer a new network that depicts which streamers share their audience before we can run the Node Similarity algorithm.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.create('shared-audience',
+  ['PokerChess', 'Audience'],
+  {CHATTERS: {type:'*', orientation:'REVERSE'}})<!--/code--></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The Node Similarity algorithm uses the Jaccard similarity coefficient to compare how similar a pair of nodes are.
+We will assume that if two streamers share at least 5% of the audience, we will create a relationship between them.
+The <em>mutate</em> mode of the algorithms stores the results back to the in-memory projected graph.
+This way, you can use the results of one algorithm as an input to another graph algorithm.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.nodeSimilarity.mutate('shared-audience',
+ {similarityCutoff:0.05, topK:15, mutateProperty:'score', mutateRelationshipType:'SHARED_AUDIENCE'})<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Community detection of shared audience network</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>With the inferred shared audience network, you can go ahead and run the community detection Louvain algorithm on it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.louvain.stream('shared-audience',
+       { nodeLabels:['PokerChess'],
+         relationshipTypes:['SHARED_AUDIENCE'],
+         relationshipWeightProperty:'score'})
+YIELD nodeId, communityId
+RETURN communityId, count(*) as communitySize, collect(gds.util.asNode(nodeId).name) as members
+ORDER BY communitySize DESC
+LIMIT 5<!--/code--></pre>
+</div>
+</div>
+	</div>
+  </div>
+</slide>
+
+
+
+<slide class="row-fluid">
+  <div class="col-sm-12">
+    <h3>Next steps</h3>
+    <br/>
+    <div>
+      <div class="paragraph">
+<p>You can try to perform the shared audience analysis on streamers who play other games.
+If you want to, you can dig deeper into the moderator or the VIP network by considering only those relatioships.
+You can also test out other centrality or community detection algorithms and see how their score compares to PageRank.</p>
+</div>
+	</div>
+  </div>
+</slide>
+  </carousel>
+</article>
