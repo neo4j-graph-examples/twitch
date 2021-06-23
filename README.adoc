@@ -37,14 +37,10 @@ image::{model}[]
 image::{example}[width=600]
 
 .Example Query:
-[source,cypher,role=query-example]
+[source,cypher,role=query-example, param-name=streamer,param-value="ludwig",result-column=moderator_or_vip,expected-result="qtcinderella"]
 ----
-MATCH (u:Stream)
-WHERE exists(u.total_view_count)
-RETURN u.name as streamer,
-       u.total_view_count as total_view_count
-ORDER BY total_view_count DESC 
-LIMIT 10;
+MATCH (s:Stream{name:$streamer})<-[:VIP|:MODERATOR]-(user)
+RETURN user.name as moderator_or_vip LIMIT 20
 ----
 
 === Setup
