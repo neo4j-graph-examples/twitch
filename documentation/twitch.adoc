@@ -17,7 +17,7 @@ This guide will show you how to:
 
 == Graph model
 
-image::{img}/graph-model.png[]
+image::{img}/graph-model.png[float=right]
 
 The Twitch social network composes of users.
 A small percent of those users broadcast their gameplay or activities through live streams.
