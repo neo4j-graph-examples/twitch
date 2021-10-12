@@ -1,5 +1,8 @@
+// sh ~/docs/neo4j-guides/run.sh twitch.adoc twitch.neo4j-browser-guide +1 https://guides.neo4j.com/sandbox/twitch
+// aws s3 cp --acl public-read twitch.neo4j-browser-guide s3://guides.neo4j.com/sandbox/twitch/index.html
+// images in guides.neo4j.com/sandbox/twitch/img/*
 = Twitch
-:images: /img
+:img: /img
 
 == Twitch network analysis
 
@@ -14,7 +17,7 @@ This guide will show you how to:
 
 == Graph model
 
-image::{images}/graph-model.png[]
+image::{img}/graph-model.png[]
 
 The Twitch social network composes of users.
 A small percent of those users broadcast their gameplay or activities through live streams.
