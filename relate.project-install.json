@@ -2,9 +2,15 @@
     "name": "twitch",
     "description":"Network analysis of the Twitch knowledge graph",
     "dbms": [
-      {
+        {
           "dumpFile": "data/twitch-40.dump",
-          "targetNeo4jVersion": "^4.0"
+          "targetNeo4jVersion": "4.0.* - 4.2.*",
+          "plugins": ["apoc", "graph-data-science"]
+      },
+      {
+          "dumpFile": "data/twitch-43.dump",
+          "targetNeo4jVersion": "^4.3",
+          "plugins": ["apoc", "graph-data-science"]
       }
   ]
 }
