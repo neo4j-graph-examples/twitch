@@ -188,7 +188,7 @@ You will begin by projecting all `User` and `Stream` nodes and the possible rela
 
 [source,cypher]
 ----
-CALL gds.graph.create('twitch', 
+CALL gds.graph.project('twitch', 
   ['User', 'Stream'], 
   ['CHATTER', 'VIP', 'MODERATOR'])
 ----
@@ -302,7 +302,7 @@ You need to infer a new network that depicts which streamers share their audienc
 
 [source,cypher]
 ----
-CALL gds.graph.create('shared-audience', 
+CALL gds.graph.project('shared-audience', 
   ['PokerChess', 'Audience'],
   {CHATTERS: {type:'*', orientation:'REVERSE'}})
 ----
@@ -315,7 +315,8 @@ This way, you can use the results of one algorithm as an input to another graph 
 [source,cypher]
 ----
 CALL gds.nodeSimilarity.mutate('shared-audience',
- {similarityCutoff:0.05, topK:15, mutateProperty:'score', mutateRelationshipType:'SHARED_AUDIENCE'})
+ {similarityMetric: 'Jaccard',similarityCutoff:0.05, topK:15, sudo:true,
+     mutateProperty:'score', mutateRelationshipType:'SHARED_AUDIENCE'})
 ----
 
 == Community detection of shared audience network

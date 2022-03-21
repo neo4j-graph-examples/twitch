@@ -86,7 +86,7 @@ Twitch streamers broadcast their gameplay or activity by sharing their screen wi
     <div>
       <div class="imageblock" style="float: right;">
 <div class="content">
-<img src="https://guides.neo4j.com/sandbox/twitch/img/graph-model.png" alt="graph model">
+<img src="http://guides.neo4j.com/intro/img/graph-model.png" alt="graph model">
 </div>
 </div>
 <div class="paragraph">
@@ -337,7 +337,7 @@ You will begin by projecting all <code>User</code> and <code>Stream</code> nodes
 </div>
 <div class="listingblock">
 <div class="content">
-<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.create('twitch',
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.project('twitch',
   ['User', 'Stream'],
   ['CHATTER', 'VIP', 'MODERATOR'])<!--/code--></pre>
 </div>
@@ -506,7 +506,7 @@ With this step, you will filter regular users who have chatted in more than a si
 </div>
 <div class="listingblock">
 <div class="content">
-<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.create('shared-audience',
+<pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.graph.project('shared-audience',
   ['PokerChess', 'Audience'],
   {CHATTERS: {type:'*', orientation:'REVERSE'}})<!--/code--></pre>
 </div>
@@ -520,7 +520,8 @@ This way, you can use the results of one algorithm as an input to another graph 
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL gds.nodeSimilarity.mutate('shared-audience',
- {similarityCutoff:0.05, topK:15, mutateProperty:'score', mutateRelationshipType:'SHARED_AUDIENCE'})<!--/code--></pre>
+ {similarityMetric: 'Jaccard',similarityCutoff:0.05, topK:15, sudo:true,
+     mutateProperty:'score', mutateRelationshipType:'SHARED_AUDIENCE'})<!--/code--></pre>
 </div>
 </div>
 	</div>
