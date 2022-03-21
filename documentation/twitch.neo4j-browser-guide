@@ -86,7 +86,7 @@ Twitch streamers broadcast their gameplay or activity by sharing their screen wi
     <div>
       <div class="imageblock" style="float: right;">
 <div class="content">
-<img src="http://guides.neo4j.com/intro/img/graph-model.png" alt="graph model">
+<img src="https://guides.neo4j.com/sandbox/twitch/img/graph-model.png" alt="graph model">
 </div>
 </div>
 <div class="paragraph">
