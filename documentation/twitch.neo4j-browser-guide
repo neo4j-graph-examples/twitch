@@ -6,7 +6,7 @@
 */	
 @import url("//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css");
 
-.imageblock .content img, .image img {max-width: 900px;max-height: 300px;}
+.imageblock .content img, .image img {max-width: 100%;}
 .deck h3, .deck h4 {display: block !important;margin-bottom:8px;margin-top:5px;}
 .listingblock {margin:8px;}
 .pull-bottom {position:relative;bottom:1em;}
@@ -147,7 +147,7 @@ You can find the most viewed and most followed streamers using the <code>ORDER B
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
-WHERE exists(u.total_view_count)
+WHERE u.total_view_count IS NOT NULL
 RETURN u.name as streamer,
        u.total_view_count as total_view_count
 ORDER BY total_view_count DESC
@@ -160,7 +160,7 @@ LIMIT 10;<!--/code--></pre>
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
-WHERE exists(u.followers)
+WHERE u.followers IS NOT NULL
 RETURN u.name as streamer,
        u.followers as followers
 ORDER BY followers DESC
@@ -189,7 +189,7 @@ In this example, you will count the number of streamers per their account creati
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
-WHERE exists(u.createdAt)
+WHERE u.createdAt IS NOT NULL
 RETURN u.createdAt.year as year,
        count(*) as countOfNewStreamers
 ORDER BY year;<!--/code--></pre>
@@ -207,16 +207,15 @@ ORDER BY year;<!--/code--></pre>
     <br/>
     <div>
       <div class="paragraph">
-<p>Neo4j maintains a transactional count store for holding relationship count store for each node.
-To access the relationship count store, you can use the <code>size()</code> clause.
-Obtaining counts from the count store is constant-time, which can significantly optimize the performance of Cypher queries.
+<p>Neo4j maintains a transactional count store for holding relationship degree for each node.
+To access that data in constant time, you can use the <code>count {}</code> clause.
 Here, you will inspect the games that have the highest count of streamers playing them.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (g:Game)
 RETURN g.name as game,
-       size((g)&lt;-[:PLAYS]-()) as number_of_streamers
+       count{ (g)&lt;-[:PLAYS]-() } as number_of_streamers
 ORDER BY number_of_streamers DESC
 LIMIT 10<!--/code--></pre>
 </div>
@@ -228,7 +227,7 @@ LIMIT 10<!--/code--></pre>
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
 RETURN u.name as user,
-       size((u)-[:VIP]-&gt;()) as number_of_vips
+       count{ (u)-[:VIP]-&gt;() } as number_of_vips
 ORDER BY number_of_vips DESC LIMIT 10;<!--/code--></pre>
 </div>
 </div>
@@ -239,7 +238,7 @@ ORDER BY number_of_vips DESC LIMIT 10;<!--/code--></pre>
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
 RETURN u.name as user,
-       size((u)-[:MODERATOR]-&gt;()) as number_of_mods
+       count{ (u)-[:MODERATOR]-&gt;() } as number_of_mods
 ORDER BY number_of_mods DESC LIMIT 10;<!--/code--></pre>
 </div>
 </div>
@@ -303,7 +302,7 @@ Using the <code>apoc.agg.statistics</code> procedure you can evaluate the distri
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:User)
-WITH u, size((u)-[:CHATTER|VIP|MODERATOR]-&gt;()) as node_outdegree
+WITH u, count{ (u)-[:CHATTER|VIP|MODERATOR]-&gt;() } as node_outdegree
 RETURN apoc.agg.statistics(node_outdegree) as statistics<!--/code--></pre>
 </div>
 </div>
@@ -314,7 +313,7 @@ Remember, only streamers have incoming relationships, so we can skip inspecting 
 <div class="listingblock">
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->MATCH (u:Stream)
-WITH u, size((u)&lt;-[:CHATTER|VIP|MODERATOR]-()) as node_indegree
+WITH u, count{ (u)&lt;-[:CHATTER|VIP|MODERATOR]-() } as node_indegree
 RETURN apoc.agg.statistics(node_indegree) as statistics<!--/code--></pre>
 </div>
 </div>
@@ -416,8 +415,8 @@ DESC LIMIT 10
 WITH gds.util.asNode(nodeId) as node,score
 RETURN node.name as streamer,
        score,
-       size((node)&lt;--(:Stream)) as relationships_from_streamers,
-       size((node)&lt;--(:User)) as relationships_from_users<!--/code--></pre>
+       count{ (node)&lt;--(:Stream) } as relationships_from_streamers,
+       count{ (node)&lt;--(:User) } as relationships_from_users<!--/code--></pre>
 </div>
 </div>
 	</div>
