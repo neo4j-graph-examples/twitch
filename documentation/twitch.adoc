@@ -288,7 +288,7 @@ With this step, you will filter regular users who have chatted in more than a si
 ----
 CALL apoc.periodic.iterate("
     MATCH (u:User)
-    WHERE NOT u:Stream AND size((u)-->(:Stream)) > 1 
+    WHERE NOT u:Stream AND COUNT {(u)-->(:Stream)} > 1
     RETURN u",
     "SET u:Audience",
     {batchSize:50000, parallel:true}
