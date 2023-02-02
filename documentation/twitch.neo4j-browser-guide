@@ -6,7 +6,7 @@
 */	
 @import url("//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css");
 
-.imageblock .content img, .image img {max-width: 100%;}
+.imageblock .content img, .image img {max-width: 900px;max-height: 300px;}
 .deck h3, .deck h4 {display: block !important;margin-bottom:8px;margin-top:5px;}
 .listingblock {margin:8px;}
 .pull-bottom {position:relative;bottom:1em;}
@@ -482,7 +482,7 @@ With this step, you will filter regular users who have chatted in more than a si
 <div class="content">
 <pre mode="cypher"  class="highlight pre-scrollable programlisting cm-s-neo code runnable standalone-example ng-binding" data-lang="cypher" lang="cypher"><!--code class="cypher language-cypher"-->CALL apoc.periodic.iterate("
     MATCH (u:User)
-    WHERE NOT u:Stream AND size((u)--&gt;(:Stream)) &gt; 1
+    WHERE NOT u:Stream AND COUNT {(u)--&gt;(:Stream)} &gt; 1
     RETURN u",
     "SET u:Audience",
     {batchSize:50000, parallel:true}
